@@ -1,9 +1,34 @@
-from django.contrib.auth.models import AbstractUser, Permission, Group
+from django.contrib.auth.models import AbstractUser, Permission, Group, BaseUserManager
 from django.db import models
 from django.contrib.auth.hashers import make_password
 
 # Create your models here.
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(email, password, **extra_fields)
+
+
 class Customer(AbstractUser):
+    objects = CustomUserManager()
     user_permissions = models.ManyToManyField(
         Permission,
         verbose_name=('user permissions'),
@@ -27,7 +52,7 @@ class Customer(AbstractUser):
             'granted to each of their groups.'
         ),
     )
-    username = None 
+    username = None
     email = models.EmailField(unique=True)
 
     # Set the email field as the username field
@@ -44,7 +69,7 @@ class Customer(AbstractUser):
 
     
     def __str__(self) -> str:
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name} has email ${self.email}"
 
 class Order(models.Model):
     class FrequncyEnum(models.TextChoices):

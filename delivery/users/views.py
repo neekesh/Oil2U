@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view,permission_classes, authenticatio
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, LoginSerializer
+from .serializers import UserSerializer, LoginSerializer, UpdateSerializer
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -53,10 +53,13 @@ def update_customer(request, pk):
         customer = Customer.objects.get(pk=pk)
     except Customer.DoesNotExist:
         return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
-
-    serializer = UserSerializer(customer, data=request.data)
+    print("customer", customer)
+    serializer = UpdateSerializer(customer, data=request.data)
+    print("customer1123", customer.email)
     if serializer.is_valid():
-        serializer.save()
+
+        serializer.update(customer, validated_data=request.data)
         return Response(serializer.data)
+    print("customer2342", customer)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
