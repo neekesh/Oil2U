@@ -102,13 +102,13 @@ def invoice(request):
     serializer  = InvoiceSerializer(data =request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-    if serializer.data["type"] == "Scheduled":
+    if serializer.data["type"] == "scheduled":
+        order = Order.objects.get(pk = serializer.data["order_id"] )
         invoice = Invoice(
-            order_id = serializer.data["order_id"],
-            user_id = request.user.id,
+            order_id =order,
+            user_id = request.user,
             payment_type = serializer.data["type"],
         )
-        order = Order.objects.get(pk = serializer.data["order_id"] )
         order.status = "pending"
         order.save()
         invoice.save()
@@ -155,6 +155,8 @@ def invoice_details(request, pk):
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 @authentication_classes([JWTAuthentication])
 def urgent_delivery(request):
+    user = request.user
+    request.data["user"] = user.id
     
     serializer  = UrgentDeliverySerializer(data =request.data)
     
@@ -180,7 +182,7 @@ def maintainence(request):
 
 
 class CustomPagination(PageNumberPagination):
-    page_size = 1
+    page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 1000
 

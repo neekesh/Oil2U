@@ -150,7 +150,7 @@ class UrgentDelivery(models.Model):
 
     def save(self, *args, **kwargs):
         self.price = self.quantity * 10
-        super(Order, self).save(*args, **kwargs)
+        super(UrgentDelivery, self).save(*args, **kwargs)
     
     
 class Invoice(models.Model):
