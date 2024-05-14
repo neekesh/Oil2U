@@ -11,7 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Customer,Invoice, Order, UrgentDelivery, Maintainence
-
+from rest_framework.pagination import PageNumberPagination
 
 @api_view(["POST",])
 def create(request):
@@ -179,6 +179,11 @@ def maintainence(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+class CustomPagination(PageNumberPagination):
+    page_size = 1
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
 
 @api_view(["GET",])
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
@@ -204,6 +209,7 @@ def history(request):
         {'type': 'maintainence', 'data': maintainence} for maintainence in maintainences_data
     ]
 
-   
-    return Response(combined_data, status=status.HTTP_200_OK)
+    paginator = CustomPagination()
+    paginated_data = paginator.paginate_queryset(combined_data, request)
+    return paginator.get_paginated_response(paginated_data)
 
