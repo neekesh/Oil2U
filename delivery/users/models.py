@@ -6,26 +6,43 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, email, full_name, profile_picture, password=None, is_admin=False, is_staff=False, is_active=True, is_superuser=True):
         if not email:
-            raise ValueError('The Email field must be set')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
+            raise ValueError("User must have an email")
+        if not password:
+            raise ValueError("User must have a password")
+        if not full_name:
+            raise ValueError("User must have a full name")
+
+        user = self.model(
+            email=self.normalize_email(email)
+        )
+        user.full_name = full_name
+        user.set_password(password)  # change password to hash
+        user.profile_picture = profile_picture
+        user.admin = is_admin
+        user.is_superuser = is_superuser
+        user.is_staff = is_staff
+        user.active = is_active
         user.save(using=self._db)
         return user
-
+        
     def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
+        if not email:
+            raise ValueError("User must have an email")
+        if not password:
+            raise ValueError("User must have a password")
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-
-        return self.create_user(email, password, **extra_fields)
-
+        user = self.model(
+            email=self.normalize_email(email)
+        )
+        user.set_password(password)
+        user.admin = True
+        user.is_staff = True
+        user.active = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
 
 class Customer(AbstractUser):
     objects = CustomUserManager()
@@ -53,18 +70,17 @@ class Customer(AbstractUser):
         ),
     )
     username = None
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, blank=True)
 
     # Set the email field as the username field
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
-    company_name= models.CharField(max_length=100)
-    address = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=15)
+    company_name= models.CharField(max_length=100, blank=True)
+    address = models.CharField(max_length=100, blank=True)
+    phone_number = models.CharField(max_length=15, blank=True)
     
     
     def save(self, *args, **kwargs):
-        # self.password = make_password(self.password)
         super(Customer, self).save(*args, **kwargs)
 
     
@@ -73,57 +89,67 @@ class Customer(AbstractUser):
 
 class Order(models.Model):
     class FrequncyEnum(models.TextChoices):
-        WEEKLY = 'W', ('Weekly')
-        FORTNIGHT = 'FN', ('Fortnight')
+        WEEKLY = 'weekly', ('weekly')
+        FORTNIGHT = 'fortnight', ('fortnight')
 
-    email = models.EmailField()
-    phone_number = models.CharField(max_length=15)
-    address = models.CharField(max_length=100)
-    start_date = models.DateField()
-    frequency = models.CharField(max_length=20,   choices=FrequncyEnum.choices,
-        default=FrequncyEnum.WEEKLY,)
-    duration = models.DecimalField( max_digits=5, decimal_places=2)
-    quantity = models.DecimalField(max_digits=5, decimal_places=2)
+    email = models.EmailField(blank=True)
+    phone_number = models.CharField(max_length=15, blank=True)
+    address = models.CharField(max_length=100, blank=True)
+    start_date = models.DateField(auto_now_add=True, blank=True)
+    frequency = models.CharField(
+            max_length=20,  choices=FrequncyEnum.choices,
+            default=FrequncyEnum.WEEKLY, blank=True,
+        )
+    duration = models.DecimalField( max_digits=5, decimal_places=2, blank=True)
+    quantity = models.DecimalField(max_digits=5, decimal_places=2,blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
     
     def __str__(self) -> str:
         return f"{self.email} {self.duration}"
 
-    
-class Invoice(models.Model):
-    class PaymentEnum(models.TextChoices):
-        Order = 'O', ('Order')
-        UrgentDelivery = 'UD', ('UrgentDelivery')
-    
-    order_id = models.OneToOneField(Order, on_delete=models.CASCADE)
-    user_id= models.OneToOneField(Customer, on_delete=models.CASCADE)
-    is_paid = models.BooleanField()
-    payment_type= models.CharField(max_length=20,   choices=PaymentEnum.choices,
-        default=PaymentEnum.UrgentDelivery,)
-    payment_date  = models.DateTimeField()
-    
-    def __str__(self) -> str:
-        return f"{self.order_id} has been paid in ${self.payment_date}"
-    
-    
+    def save(self, *args, **kwargs):
+        self.price = self.quantity * 10
+        super(Order, self).save(*args, **kwargs)
 
 
 class UrgentDelivery(models.Model):
    
-    email = models.EmailField()
-    address = models.CharField(max_length=100)
-    start_date = models.DateField()
-    phone_number = models.CharField(max_length=20)
-    quantity = models.DecimalField(max_digits=5, decimal_places=2)
+    email = models.EmailField(blank=True)
+    address = models.CharField(max_length=100,blank=True)
+    start_date = models.DateField(auto_now_add=True, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
     
     def __str__(self):
         return f"{self.email} has urgernt develivery to {self.address}"
+
+    def save(self, *args, **kwargs):
+        self.price = self.quantity * 10
+        super(Order, self).save(*args, **kwargs)
     
+    
+class Invoice(models.Model):
+    class PaymentEnum(models.TextChoices):
+        Order = 'scheduled_order', ('scheduled_order')
+        UrgentDelivery = 'delivery', ('delivery')
+    
+    urgent_delivery_id = models.OneToOneField(UrgentDelivery, on_delete=models.CASCADE, blank=True, null=True)
+    order_id = models.OneToOneField(Order, on_delete=models.CASCADE, blank=True, null=True)
+    user_id= models.OneToOneField(Customer, on_delete=models.CASCADE, blank=True)
+    is_paid = models.BooleanField()
+    payment_type= models.CharField(max_length=20,   choices=PaymentEnum.choices,
+        default=PaymentEnum.UrgentDelivery, blank=True)
+    payment_date  = models.DateTimeField(auto_now_add=True, blank=True)
+    
+    def __str__(self) -> str:
+        return f"{self.order_id} has been paid in ${self.payment_date}"
+
     
 class Maintainence(models.Model):
 
-    email = models.EmailField()
-    address = models.CharField(max_length=100)
-    date = models.DateField()
+    email = models.EmailField(blank=True)
+    address = models.CharField(max_length=100,blank=True)
+    date = models.DateField(auto_now_add=True)
     phone_number = models.CharField(max_length=20)
     problem_statment = models.TextField()
     

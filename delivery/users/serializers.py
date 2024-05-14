@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Customer
+from .models import Customer, Order, Invoice, Maintainence, UrgentDelivery
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -41,4 +41,28 @@ class UpdateUserSerializer(serializers.ModelSerializer):
             instance.password = validated_data.get('password', instance.password)
         instance.save()
         return instance
-    
+
+
+class OrderSeralizer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = "__all__"
+        
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = "__all__"
+        
+
+class MaintainenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Maintainence
+        fields = "__all__"
+        
+
+class UrgentDeliverySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UrgentDelivery
+        fields = "__all__"
+        

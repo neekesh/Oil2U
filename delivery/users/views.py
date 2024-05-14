@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view,permission_classes, authenticatio
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer
+from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer,OrderSeralizer, UrgentDeliverySerializer,InvoiceSerializer,MaintainenceSerializer
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -21,8 +21,6 @@ def create(request):
 
     serializer.perform_create(serializer)
     return Response(serializer.data)
-        
-    # serializer.create()
 
 @api_view(["POST",])
 def login(request):
@@ -63,3 +61,84 @@ def update_customer(request, pk):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+@api_view(["POST",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def create_order(request):
+    
+    serializer  = OrderSeralizer(data =request.data)
+    
+    if not serializer.is_valid():
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    serializer.save()
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["POST",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def invoice(request):
+    
+    serializer  = InvoiceSerializer(data =request.data)
+    
+    if not serializer.is_valid():
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    serializer.save()
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def all_invoices(request):
+    
+    serializer  = InvoiceSerializer(data =request.data)
+    
+    if not serializer.is_valid():
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    serializer.save()
+    return Response(serializer.Data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def invoice_details(request):
+    
+    serializer  = InvoiceSerializer(data =request.data)
+    
+    if not serializer.is_valid():
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    serializer.save()
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+@api_view(["POST",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def urgent_delivery(request):
+    
+    serializer  = UrgentDeliverySerializer(data =request.data)
+    
+    if not serializer.is_valid():
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    serializer.save()
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+@api_view(["POST",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def maintainence(request):
+    
+     
+    serializer  = MaintainenceSerializer(data =request.data)
+    
+    if not serializer.is_valid():
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    serializer.save()
+    return Response(serializer.Data, status=status.HTTP_201_CREATED)
