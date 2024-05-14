@@ -10,7 +10,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .models import Customer,Invoice, Order, UrgentDelivery
+from .models import Customer,Invoice, Order, UrgentDelivery, Maintainence
 
 
 @api_view(["POST",])
@@ -186,7 +186,24 @@ def maintainence(request):
 def history(request):
     
     user = request.user
-    history = Customer.objects.select_related('order').select_related('urgent_delivery').select_related('maintained').filter(user = user)
+    orders = Order.objects.filter(user=user)
+    urgent_deliveries = UrgentDelivery.objects.filter(user=user)
+    maintainences = Maintainence.objects.filter(user=user)
+  # Serialize the objects
+    orders_data = OrderSeralizer(orders, many=True).data
+    urgent_deliveries_data = UrgentDeliverySerializer(urgent_deliveries, many=True).data
+    maintainences_data = MaintainenceSerializer(maintainences, many=True).data
+
+
+    # Combine the serialized data
+    combined_data = [
+        {'type': 'order', 'data': order} for order in orders_data
+    ] + [
+        {'type': 'urgent_delivery', 'data': delivery} for delivery in urgent_deliveries_data
+    ] + [
+        {'type': 'maintainence', 'data': maintainence} for maintainence in maintainences_data
+    ]
+
    
-    return Response(history, status=status.HTTP_200_CREATED)
+    return Response(combined_data, status=status.HTTP_200_OK)
 
