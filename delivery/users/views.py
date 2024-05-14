@@ -3,13 +3,14 @@ from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view,permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.core.paginator import Paginator
 
 from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer,OrderSeralizer, UrgentDeliverySerializer,InvoiceSerializer,MaintainenceSerializer
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .models import Customer
+from .models import Customer,Invoice, Order, UrgentDelivery
 
 
 @api_view(["POST",])
@@ -43,6 +44,7 @@ def login(request):
         "access": str(refresh.access_token)
     })
 
+
 @api_view(['PUT'])  # Example permission class
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 @authentication_classes([JWTAuthentication])
@@ -61,17 +63,33 @@ def update_customer(request, pk):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])  # Example permission class
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def user_details(request, pk):
+    try:
+        customer = Customer.objects.get(pk=pk)
+    except Customer.DoesNotExist:
+        return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UpdateUserSerializer(customer)
+    # if serializer.is_valid():
+    return Response(serializer.data)
+  
+
 
 
 @api_view(["POST",])
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 @authentication_classes([JWTAuthentication])
 def create_order(request):
-    
-    serializer  = OrderSeralizer(data =request.data)
-    
+    user = request.user
+    request.data["user"] = user.id
+
+    serializer  = OrderSeralizer(data =request.data)    
     if not serializer.is_valid():
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    
     serializer.save()
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -82,11 +100,30 @@ def create_order(request):
 def invoice(request):
     
     serializer  = InvoiceSerializer(data =request.data)
-    
     if not serializer.is_valid():
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-    serializer.save()
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    if serializer.data["type"] == "Scheduled":
+        invoice = Invoice(
+            order_id = serializer.data["order_id"],
+            user_id = request.user.id,
+            payment_type = serializer.data["type"],
+        )
+        order = Order.objects.get(pk = serializer.data["order_id"] )
+        order.status = "pending"
+        order.save()
+        invoice.save()
+    else:
+        invoice = Invoice(
+            urgent_delivery_id = serializer.data["order_id"],
+            user_id = request.user.id,
+            payment_type = serializer.data["type"],
+        )
+        order = Order.objects.get(pk = serializer.data["order_id"] )
+        order.status = "pending"
+        order.save()
+        invoice.save()
+    
+    return Response("your payment was successfull", status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET",])
@@ -94,25 +131,23 @@ def invoice(request):
 @authentication_classes([JWTAuthentication])
 def all_invoices(request):
     
-    serializer  = InvoiceSerializer(data =request.data)
-    
-    if not serializer.is_valid():
-        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-    serializer.save()
+    user=request.user
+    invoices = Invoice.objects.select_related('urgent_delivery_id').select_related('order_id').filter(user = user)
+    paginator = Paginator(invoices, 4)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    serializer = InvoiceSerializer(page_obj, many=True)
     return Response(serializer.Data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET",])
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 @authentication_classes([JWTAuthentication])
-def invoice_details(request):
+def invoice_details(request, pk):
     
-    serializer  = InvoiceSerializer(data =request.data)
+    invoice = Invoice.objects.select_related('urgent_delivery_id').select_related('order_id').get(pk = pk)
     
-    if not serializer.is_valid():
-        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-    serializer.save()
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(invoice, status=status.HTTP_200_OK)
 
 
 
@@ -141,4 +176,17 @@ def maintainence(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
     serializer.save()
-    return Response(serializer.Data, status=status.HTTP_201_CREATED)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+@api_view(["GET",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def history(request):
+    
+    user = request.user
+    history = Customer.objects.select_related('order').select_related('urgent_delivery').select_related('maintained').filter(user = user)
+   
+    return Response(history, status=status.HTTP_200_CREATED)
+

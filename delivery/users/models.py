@@ -90,7 +90,13 @@ class Customer(AbstractUser):
 class Order(models.Model):
     class FrequncyEnum(models.TextChoices):
         WEEKLY = 'weekly', ('weekly')
-        FORTNIGHT = 'fortnight', ('fortnight')
+        FORTNIGHT = 'fortnight', ('fortnight') 
+    
+    class Status(models.TextChoices):
+        PROCESSING = 'processing', ('processing')
+        CREATED = 'created', ('created')
+        PENDING = 'pending', ('pending')
+        COMPLETED = 'completed', ('completed')
 
     email = models.EmailField(blank=True)
     phone_number = models.CharField(max_length=15, blank=True)
@@ -100,9 +106,16 @@ class Order(models.Model):
             max_length=20,  choices=FrequncyEnum.choices,
             default=FrequncyEnum.WEEKLY, blank=True,
         )
+    status = models.CharField( 
+                        max_length=20, 
+                        choices=Status.choices,
+                        default=Status.CREATED,
+                        blank=True,
+                    )
     duration = models.DecimalField( max_digits=5, decimal_places=2, blank=True)
     quantity = models.DecimalField(max_digits=5, decimal_places=2,blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
+    user = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name="order")
     
     def __str__(self) -> str:
         return f"{self.email} {self.duration}"
@@ -113,12 +126,24 @@ class Order(models.Model):
 
 
 class UrgentDelivery(models.Model):
+    class Status(models.TextChoices):
+        PROCESSING = 'processing', ('processing')
+        CREATED = 'created', ('created')
+        PENDING = 'pending', ('pending')
+        COMPLETED = 'completed', ('completed')
+
    
     email = models.EmailField(blank=True)
     address = models.CharField(max_length=100,blank=True)
     start_date = models.DateField(auto_now_add=True, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
     quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
+    status = models.CharField( 
+                        max_length=20, 
+                        choices=Status.choices,
+                         default=Status.CREATED,)
+    user = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name="urgent_delivery",  null=True)
+                       
     
     def __str__(self):
         return f"{self.email} has urgernt develivery to {self.address}"
@@ -130,13 +155,13 @@ class UrgentDelivery(models.Model):
     
 class Invoice(models.Model):
     class PaymentEnum(models.TextChoices):
-        Order = 'scheduled_order', ('scheduled_order')
-        UrgentDelivery = 'delivery', ('delivery')
+        Order = 'scheduled', ('scheduled')
+        UrgentDelivery = 'urgent', ('urgent')
     
     urgent_delivery_id = models.OneToOneField(UrgentDelivery, on_delete=models.CASCADE, blank=True, null=True)
     order_id = models.OneToOneField(Order, on_delete=models.CASCADE, blank=True, null=True)
     user_id= models.OneToOneField(Customer, on_delete=models.CASCADE, blank=True)
-    is_paid = models.BooleanField()
+    is_paid = models.BooleanField(default=True)
     payment_type= models.CharField(max_length=20,   choices=PaymentEnum.choices,
         default=PaymentEnum.UrgentDelivery, blank=True)
     payment_date  = models.DateTimeField(auto_now_add=True, blank=True)
@@ -152,7 +177,14 @@ class Maintainence(models.Model):
     date = models.DateField(auto_now_add=True)
     phone_number = models.CharField(max_length=20)
     problem_statment = models.TextField()
+    user = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name="maintained", null=True)
     
     def __str__(self):
         return f"{self.email} has urgernt maintained  to {self.address}"
     
+
+# class Notification(models.Model):
+    
+#     user = models.OneToOneRel(Customer, on_delete=models.CASCADE, blank=True)
+#     user = models.OneToOneRel(Customer, on_delete=models.CASCADE, blank=True)
+#     user = models.OneToOneRel(Customer, on_delete=models.CASCADE, blank=True)

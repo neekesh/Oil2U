@@ -24,11 +24,6 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         fields = ['first_name','last_name','company_name','address', 'phone_number', 'email', ]
         disallowed = ['password', ]
     
-    def validate_email(self, value):
-        # Check if the email already exists
-        if Customer.objects.filter(email=value).exists():
-            # If the email already exists, return the value instead of raising an error
-            return value
     def update(self, instance, validated_data):
 
         instance.first_name = validated_data.get('first_name', instance.first_name)
@@ -49,10 +44,13 @@ class OrderSeralizer(serializers.ModelSerializer):
         fields = "__all__"
         
 
-class InvoiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Invoice
-        fields = "__all__"
+class InvoiceSerializer(serializers.Serializer):
+    ORDER_CHOICES = [
+        ('scheduled', 'scheduled'),
+        ('urgent', 'urgent'),
+    ]
+    type = serializers.ChoiceField(choices=ORDER_CHOICES)
+    order_id = serializers.IntegerField()
         
 
 class MaintainenceSerializer(serializers.ModelSerializer):
