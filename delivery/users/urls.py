@@ -20,9 +20,10 @@ urlpatterns = [
     path("notification/<int:pk>", views.notification_details, name="notfication_details"),
     path("notification/latest", views.notifcation_latest, name="notifcation_latest"),
     path("notification/lists", views.notification_list, name="notifcation_list"),
-    path("notificaiton/update/<int:pk>", views.notification_update, name="notification_update"),
-    
+    path("notification/update/<int:pk>", views.notification_update, name="notification_update"),
+
     path("urgent-delivery", views.urgent_delivery, name="urgent_delivery"),
+    path("order/<int:pk>", views.update_order_status, name="updated_order_status"),
     path("history", views.history, name="history"),
     path("maintainence", views.maintainence, name="maintainence"),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

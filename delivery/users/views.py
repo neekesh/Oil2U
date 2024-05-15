@@ -290,4 +290,26 @@ def notification_update(request, pk):
     return Response('Status updated successfully', status = 200)
 
 
+@api_view(["PUT",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def update_order_status(request, pk):
+    order_type = request.data["type"]
+    match order_type:
+        case "scheduled":
+            try:
+                order = Order.objects.get(pk=pk)
+            except Notification.DoesNotExist:
+                return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+        case "urgent":
+            try:
+                order = UrgentDelivery.objects.get(pk=pk)
+            except Notification.DoesNotExist:
+                return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+    order.status = "completed"
+    order.save()
+    return Response('Status updated successfully', status = 200)
+
+
 
