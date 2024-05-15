@@ -12,7 +12,7 @@ urlpatterns = [
     path("register",views.create, name="user_register"),
     path("login", views.login, name="user_signup"),
     path("edit_user/<int:pk>", views.update_customer, name="user_edit"),
-    path("user/<int:pk>", views.user_details, name="user_detail"),
+    path("user", views.user_details, name="user_detail"),
     path("order", views.create_order, name="create_order"),
     path("invoice", views.invoice, name="create_invoices"),
     path("invoice/all", views.all_invoices, name="invoices_lists"),
@@ -21,7 +21,6 @@ urlpatterns = [
     path("notification/latest", views.notifcation_latest, name="notifcation_latest"),
     path("notification/lists", views.notification_list, name="notifcation_list"),
     path("notification/update/<int:pk>", views.notification_update, name="notification_update"),
-
     path("urgent-delivery", views.urgent_delivery, name="urgent_delivery"),
     path("order/<int:pk>", views.update_order_status, name="updated_order_status"),
     path("history", views.history, name="history"),
