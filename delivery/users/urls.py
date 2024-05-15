@@ -11,7 +11,7 @@ from. import views
 urlpatterns = [
     path("register",views.create, name="user_register"),
     path("login", views.login, name="user_signup"),
-    path("edit_user/<int:pk>", views.update_customer, name="user_edit"),
+    path("edit_user", views.update_customer, name="user_edit"),
     path("user", views.user_details, name="user_detail"),
     path("order", views.create_order, name="create_order"),
     path("invoice", views.invoice, name="create_invoices"),

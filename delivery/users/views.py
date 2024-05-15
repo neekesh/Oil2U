@@ -50,9 +50,9 @@ def login(request):
 @api_view(['PUT'])  # Example permission class
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 @authentication_classes([JWTAuthentication])
-def update_customer(request, pk):
+def update_customer(request):
     try:
-        customer = Customer.objects.get(pk=pk)
+        customer = Customer.objects.get(pk=request.user.id)
     except Customer.DoesNotExist:
         return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
 
