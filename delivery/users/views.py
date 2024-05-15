@@ -6,12 +6,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.paginator import Paginator
 
-from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer,OrderSeralizer, UrgentDeliverySerializer,InvoiceSerializer,MaintainenceSerializer
+from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer,OrderSerializer, UrgentDeliverySerializer,InvoiceSerializer,MaintainenceSerializer, InvoiceInputSerializer,NotificationSerializer
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .models import Customer,Invoice, Order, UrgentDelivery, Maintainence
+from .models import Customer,Invoice, Order, UrgentDelivery, Maintainence, Notification
 from rest_framework.pagination import PageNumberPagination
 from .utils import add_date
 
@@ -95,7 +95,7 @@ def create_order(request):
         case "fortnight":
             request.data["next_date"] = add_date(start_date, 15)
 
-    serializer  = OrderSeralizer(data =request.data)    
+    serializer  = OrderSerializer(data =request.data)    
     if not serializer.is_valid():
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
     
@@ -108,7 +108,7 @@ def create_order(request):
 @authentication_classes([JWTAuthentication])
 def invoice(request):
     
-    serializer  = InvoiceSerializer(data =request.data)
+    serializer  = InvoiceInputSerializer(data =request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
     if serializer.data["type"] == "scheduled":
@@ -141,22 +141,25 @@ def invoice(request):
 def all_invoices(request):
     
     user=request.user
-    invoices = Invoice.objects.select_related('urgent_delivery_id').select_related('order_id').filter(user = user)
+    invoices = Invoice.objects.select_related('urgent_delivery').select_related('order').filter(user = user).order_by("-payment_date")
     paginator = Paginator(invoices, 4)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     serializer = InvoiceSerializer(page_obj, many=True)
-    return Response(serializer.Data, status=status.HTTP_201_CREATED)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET",])
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 @authentication_classes([JWTAuthentication])
 def invoice_details(request, pk):
+    try:
+        invoice = Invoice.objects.select_related('urgent_delivery').select_related('order').get(pk = pk)
+    except Invoice.DoesNotExist:
+        return Response({'error': 'invoice not found'}, status=status.HTTP_404_NOT_FOUND)
+    serializer = InvoiceSerializer(invoice)
     
-    invoice = Invoice.objects.select_related('urgent_delivery_id').select_related('order_id').get(pk = pk)
-    
-    return Response(invoice, status=status.HTTP_200_OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
@@ -209,7 +212,7 @@ def history(request):
     urgent_deliveries = UrgentDelivery.objects.filter(user=user)
     maintainences = Maintainence.objects.filter(user=user)
   # Serialize the objects
-    orders_data = OrderSeralizer(orders, many=True).data
+    orders_data = OrderSerializer(orders, many=True).data
     urgent_deliveries_data = UrgentDeliverySerializer(urgent_deliveries, many=True).data
     maintainences_data = MaintainenceSerializer(maintainences, many=True).data
 
@@ -226,4 +229,66 @@ def history(request):
     paginator = CustomPagination()
     paginated_data = paginator.paginate_queryset(combined_data, request)
     return paginator.get_paginated_response(paginated_data)
+
+
+
+@api_view(["GET",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def notification_details(request, pk):
+    try:
+        notification = Notification.objects.get(pk=pk)
+    except Notification.DoesNotExist:
+        return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
+    serializer = NotificationSerializer(notification)
+    return Response(serializer.data, status=200)
+
+
+
+
+@api_view(["GET",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def notifcation_latest(request):
+    try:
+        notification = Notification.objects.filter(user=request.user).order_by("-date").first()
+    except Notification.DoesNotExist:
+        return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
+    serializer = NotificationSerializer(notification)
+    return Response(serializer.data, status=200)
+
+
+
+
+@api_view(["GET",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def notification_list(request, pk):
+    try:
+        notifications = Notification.objects.filter(user=request.user).order_by("-date")
+    except Notification.DoesNotExist:
+        return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    paginator = Paginator(notifications, 4)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    serializer = InvoiceSerializer(page_obj, many=True)
+    serializer = NotificationSerializer(notifications, many=True)
+    return Response(serializer.data, status=200)
+
+
+@api_view(["PUT",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def notification_update(request, pk):
+    
+    try:
+        notification = Notification.objects.get(pk=pk)
+    except Notification.DoesNotExist:
+        return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
+    notification.is_seen = not  notification.is_seen 
+    notification.save()
+    return Response('Status updated successfully', status = 200)
+
+
 

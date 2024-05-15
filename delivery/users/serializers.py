@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Customer, Order, Invoice, Maintainence, UrgentDelivery
+from .models import Customer, Order, Invoice, Maintainence, UrgentDelivery, Notification
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -38,19 +38,20 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         return instance
 
 
-class OrderSeralizer(serializers.ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = "__all__"
         
 
-class InvoiceSerializer(serializers.Serializer):
+class InvoiceInputSerializer(serializers.Serializer):
     ORDER_CHOICES = [
         ('scheduled', 'scheduled'),
         ('urgent', 'urgent'),
     ]
     type = serializers.ChoiceField(choices=ORDER_CHOICES)
     order_id = serializers.IntegerField()
+
         
 
 class MaintainenceSerializer(serializers.ModelSerializer):
@@ -64,3 +65,20 @@ class UrgentDeliverySerializer(serializers.ModelSerializer):
         model = UrgentDelivery
         fields = "__all__"
         
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    order = OrderSerializer()  # Assuming OrderSerializer is defined
+    urgent_delivery = UrgentDeliverySerializer()  
+    class Meta:
+        model = Invoice
+        fields = "__all__"
+        depth = 2
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model=Notification
+        fields = "__all__"
+        
+    
