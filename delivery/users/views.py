@@ -1,3 +1,4 @@
+
 from django.contrib.auth import authenticate
 
 from rest_framework.decorators import api_view,permission_classes, authentication_classes
@@ -12,6 +13,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Customer,Invoice, Order, UrgentDelivery, Maintainence
 from rest_framework.pagination import PageNumberPagination
+from .utils import add_date
 
 @api_view(["POST",])
 def create(request):
@@ -78,13 +80,20 @@ def user_details(request, pk):
   
 
 
-
 @api_view(["POST",])
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 @authentication_classes([JWTAuthentication])
 def create_order(request):
     user = request.user
     request.data["user"] = user.id
+    start_date = request.data['start_date']
+    frequency = request.data["frequency"]
+    match frequency:
+        case "weekly":
+            request.data["next_date"] = add_date(start_date, 7)
+
+        case "fortnight":
+            request.data["next_date"] = add_date(start_date, 15)
 
     serializer  = OrderSeralizer(data =request.data)    
     if not serializer.is_valid():
@@ -105,22 +114,22 @@ def invoice(request):
     if serializer.data["type"] == "scheduled":
         order = Order.objects.get(pk = serializer.data["order_id"] )
         invoice = Invoice(
-            order_id =order,
-            user_id = request.user,
+            order =order,
+            user= request.user,
             payment_type = serializer.data["type"],
         )
         order.status = "pending"
         order.save()
         invoice.save()
     else:
+        urgent_delivery = UrgentDelivery.objects.get(pk = serializer.data["order_id"] )
         invoice = Invoice(
-            urgent_delivery_id = serializer.data["order_id"],
+            urgent_delivery = urgent_delivery,
             user_id = request.user.id,
             payment_type = serializer.data["type"],
         )
-        order = Order.objects.get(pk = serializer.data["order_id"] )
-        order.status = "pending"
-        order.save()
+        urgent_delivery.status = "pending"
+        urgent_delivery.save()
         invoice.save()
     
     return Response("your payment was successfull", status=status.HTTP_201_CREATED)
@@ -173,7 +182,10 @@ def urgent_delivery(request):
 def maintainence(request):
     
      
+    user = request.user
+    request.data["user"] = user.id
     serializer  = MaintainenceSerializer(data =request.data)
+
     
     if not serializer.is_valid():
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)

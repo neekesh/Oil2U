@@ -78,6 +78,7 @@ class Customer(AbstractUser):
     company_name= models.CharField(max_length=100, blank=True)
     address = models.CharField(max_length=100, blank=True)
     phone_number = models.CharField(max_length=15, blank=True)
+    date_joined = models.DateField(auto_now_add=True, blank=True)
     
     
     def save(self, *args, **kwargs):
@@ -101,7 +102,8 @@ class Order(models.Model):
     email = models.EmailField(blank=True)
     phone_number = models.CharField(max_length=15, blank=True)
     address = models.CharField(max_length=100, blank=True)
-    start_date = models.DateField(auto_now_add=True, blank=True)
+    start_date = models.DateField( blank=True)
+    next_date = models.DateField( blank=True)
     frequency = models.CharField(
             max_length=20,  choices=FrequncyEnum.choices,
             default=FrequncyEnum.WEEKLY, blank=True,
@@ -135,14 +137,14 @@ class UrgentDelivery(models.Model):
    
     email = models.EmailField(blank=True)
     address = models.CharField(max_length=100,blank=True)
-    start_date = models.DateField(auto_now_add=True, blank=True)
+    date = models.DateField(blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
     quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
     status = models.CharField( 
                         max_length=20, 
                         choices=Status.choices,
                          default=Status.CREATED,)
-    user = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="urgent_delivery",  null=True)
+    user = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="urgent_delivery")
                        
     
     def __str__(self):
@@ -158,9 +160,9 @@ class Invoice(models.Model):
         Order = 'scheduled', ('scheduled')
         UrgentDelivery = 'urgent', ('urgent')
     
-    urgent_delivery_id = models.ForeignKey(UrgentDelivery, on_delete=models.CASCADE, blank=True, null=True)
-    order_id = models.ForeignKey(Order, on_delete=models.CASCADE, blank=True, null=True)
-    user_id= models.ForeignKey(Customer, on_delete=models.CASCADE, blank=True)
+    urgent_delivery = models.ForeignKey(UrgentDelivery, on_delete=models.CASCADE, blank=True, null=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, blank=True, null=True)
+    user= models.ForeignKey(Customer, on_delete=models.CASCADE, blank=True)
     is_paid = models.BooleanField(default=True)
     payment_type= models.CharField(max_length=20,   choices=PaymentEnum.choices,
         default=PaymentEnum.UrgentDelivery, blank=True)
@@ -174,10 +176,10 @@ class Maintainence(models.Model):
 
     email = models.EmailField(blank=True)
     address = models.CharField(max_length=100,blank=True)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField()
     phone_number = models.CharField(max_length=20)
     problem_statment = models.TextField()
-    user = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="maintained", null=True)
+    user = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="maintained")
     
     def __str__(self):
         return f"{self.email} has urgernt maintained  to {self.address}"

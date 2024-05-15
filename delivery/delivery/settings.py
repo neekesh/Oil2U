@@ -39,21 +39,40 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "users",
     "rest_framework",
-    "corsheaders",
     "rest_framework_simplejwt",
+    'django_crontab',
+]
+CRONJOBS = [
+    ('*/1 * * * *', 'users.utils.ScheduledDelivery')
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+# settings.py
+
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+CORS_ALLOW_HEADERS = ['*']
+CORS_ALLOW_ORIGINS = ['*']
+CORS_ALLOW_CREDENTIALS = True
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_TRUSTED_ORIGINS = [
+   "https://just-rattler-possibly.ngrok-free.app/",
+   
+]
     
+ALLOWED_HOSTS=["*"]
+
+# settings.py
+
+REST_FRAMEWORK_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'delivery.urls'
 
