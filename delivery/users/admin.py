@@ -1,16 +1,8 @@
 from django.contrib import admin
-from .models import Customer, Order,UrgentDelivery,Invoice,Maintainence
+from .models import Customer, Order,UrgentDelivery,Invoice,Maintainence, Notification
 from django.contrib.auth.models import Group
-from django.contrib.admin import AdminSite
 
-# class ServiceAdmin(AdminSite):
-#     site_header = 'Admin Portal'
-#     site_title = 'Admin Portal'
-#     index_title = 'Welcome to the Admin Portal'
-# admin_site = ServiceAdmin(name='myadmin')
 
-# # Register models with the custom admin site
-# admin_site.register(YourModel, YourModelAdmin)
 # Register your models here.
 class AdminCustomer(admin.ModelAdmin):
     list_display = ('email', 'company_name', 'date_joined')  # Display these fields in the admin list view
@@ -45,5 +37,6 @@ admin.site.register(Order, AdminOrder)
 admin.site.register(UrgentDelivery, UrgentDeliveryAdmin)
 admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Maintainence, MaintainenceAdmin)
+admin.site.register(Notification)
 admin.site.unregister(Group)
 

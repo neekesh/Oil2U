@@ -263,7 +263,7 @@ def notifcation_latest(request):
 @api_view(["GET",])
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 @authentication_classes([JWTAuthentication])
-def notification_list(request, pk):
+def notification_list(request):
     try:
         notifications = Notification.objects.filter(user=request.user).order_by("-date")
     except Notification.DoesNotExist:
@@ -272,8 +272,7 @@ def notification_list(request, pk):
     paginator = Paginator(notifications, 4)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    serializer = InvoiceSerializer(page_obj, many=True)
-    serializer = NotificationSerializer(notifications, many=True)
+    serializer = NotificationSerializer(page_obj, many=True)
     return Response(serializer.data, status=200)
 
 

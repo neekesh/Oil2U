@@ -19,7 +19,7 @@ urlpatterns = [
     path("invoice/<int:pk>", views.invoice_details, name="invoice_get"),
     path("notification/<int:pk>", views.notification_details, name="notfication_details"),
     path("notification/latest", views.notifcation_latest, name="notifcation_latest"),
-    path("notificaiton/lists", views.notification_list, name="notifcation_list"),
+    path("notification/lists", views.notification_list, name="notifcation_list"),
     path("notificaiton/update/<int:pk>", views.notification_update, name="notification_update"),
     
     path("urgent-delivery", views.urgent_delivery, name="urgent_delivery"),

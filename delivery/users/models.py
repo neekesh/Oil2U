@@ -124,24 +124,6 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         self.price = self.quantity * 10
-        if self.pk is None:
-            # The instance is being created
-
-            Notification.objects.create(
-            order=self,
-            user = self.user,
-            status= self.status,
-        )
-        else:
-            # The instance is being updated
-            # Optionally, store the original state for change tracking
-            original_state = Order.objects.get(pk=self.pk)
-            if self.status != original_state.status:
-                Notification.objects.create(
-                    order=self,
-                    user = self.user,
-                    status= self.status,
-                )
         super(Order, self).save(*args, **kwargs)
 
 
@@ -170,24 +152,6 @@ class UrgentDelivery(models.Model):
 
     def save(self, *args, **kwargs):
         self.price = self.quantity * 10
-        if self.pk is None:
-            # The instance is being created
-
-            Notification.objects.create(
-            order=self,
-            user = self.user,
-            status= self.status,
-        )
-        else:
-            # The instance is being updated
-            # Optionally, store the original state for change tracking
-            original_state = Order.objects.get(pk=self.pk)
-            if self.status != original_state.status:
-                Notification.objects.create(
-                    order=self,
-                    user = self.user,
-                    status= self.status,
-                )
         super(UrgentDelivery, self).save(*args, **kwargs)
     
     
@@ -218,7 +182,7 @@ class Maintainence(models.Model):
     user = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="maintained")
     
     def __str__(self):
-        return f"{self.email} has urgernt maintained  to {self.address}"
+        return f"{self.user} has  maintained  to {self.address}"
     
 
 class Notification(models.Model):
@@ -228,11 +192,11 @@ class Notification(models.Model):
         PENDING = 'pending', ('pending')
         COMPLETED = 'completed', ('completed')
     
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, blank=True)
-    urgent_delivery = models.ForeignKey(UrgentDelivery, on_delete=models.CASCADE, blank=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, blank=True, null=True)
+    urgent_delivery = models.ForeignKey(UrgentDelivery, on_delete=models.CASCADE, blank=True, null=True)
     user = models.ForeignKey(Customer, on_delete=models.CASCADE, blank=True)
     is_seen = models.BooleanField(default=False)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True)
     status = models.CharField( 
                         max_length=20, 
                         choices=Status.choices,
