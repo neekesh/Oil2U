@@ -299,6 +299,7 @@ def update_order_status(request, pk):
         case "scheduled":
             try:
                 order = Order.objects.get(pk=pk)
+                
             except Notification.DoesNotExist:
                 return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
         case "urgent":
@@ -310,6 +311,68 @@ def update_order_status(request, pk):
     order.status = "completed"
     order.save()
     return Response('Status updated successfully', status = 200)
+
+
+
+@api_view(["GET",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def latest_order(request):
+    order_type = request.data["type"]
+    match order_type:
+        case "scheduled":
+            try:
+                order = Order.objects.filter(status="created").filter(user=request.user).order_by("-start_date").first()
+                serializer = OrderSerializer(order)
+            except Notification.DoesNotExist:
+                return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+        case "urgent":
+            try:
+                order = UrgentDelivery.objects.filter(status="created").filter(user=request.user).order_by("-start_date").first()
+                serializer = UrgentDeliverySerializer(order)
+            except Notification.DoesNotExist:
+                return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+
+    return Response(serializer.data, status = 200)
+
+
+@api_view(["PUT",])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@authentication_classes([JWTAuthentication])
+def edit_order(request, pk):
+    print("jfkjalkdfkldflkdajlkfjakldfalksdfk")
+    order_type = request.data["type"]
+    request.data["user"] = request.user.id
+    print("jfkjalkdfkldflkdajlkfjakldfalksdfk"+"fjakljflkjdflkjlkflajlkfjalkflklklfkjasljlkdjflkj")
+    match order_type:
+        case "scheduled":
+            try:
+                print("jfkjalkdfkldflkdajlkfjakldfa--------------lksdfk"+"fjakljflkjdflkjlkflajlkfjalkflklklfkjasljlkdjflkj")
+                order = Order.objects.get(pk=pk)
+            
+                serializer = OrderSerializer(order, data=request.data)
+                if serializer.is_valid():
+                    print("jfkjalkdfkldflkdajlkfjakldfa********************lksdfk"+"fjakljflkjdflkjlkflajlkfjalkflklklfkjasljlkdjflkj")
+                    serializer.update(order, validated_data=request.data)
+                    print("jfkjalkdfkldflkdajlkfjakldfa+++++++++lksdfk"+"fjakljflkjdflkjlkflajlkfjalkflklklfkjasljlkdjflkj")
+                    return Response(serializer.data)
+                return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except Order.DoesNotExist:
+                return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+        case "urgent":
+            try:
+                order = UrgentDelivery.objects.get(pk=pk)
+                serializer = UrgentDeliverySerializer(order, data=request.data)
+                if serializer.is_valid():
+                    serializer.update(order, validated_data=request.data)
+                    return Response(serializer.data)
+            except Notification.DoesNotExist:
+                return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+
+    return Response(serializer.data, status = 200)
+
 
 
 

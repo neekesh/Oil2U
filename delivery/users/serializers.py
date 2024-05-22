@@ -42,6 +42,19 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = "__all__"
+    
+    def update(self, instance, validated_data):
+
+        instance.email = validated_data.get('email', instance.email)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.address = validated_data.get('address', instance.address)
+        instance.start_date = validated_data.get('start_date', instance.start_date)
+        instance.frequency = validated_data.get('frequency', instance.frequency)
+        instance.duration = validated_data.get('duration', instance.duration)
+        instance.quantity = validated_data.get('quantity', instance.quantity)
+        instance.save()
+        return instance
+
         
 
 class InvoiceInputSerializer(serializers.Serializer):
@@ -53,6 +66,12 @@ class InvoiceInputSerializer(serializers.Serializer):
     order_id = serializers.IntegerField()
 
         
+class LatestOrderSerializer(serializers.Serializer):
+    ORDER_CHOICES = [
+        ('scheduled', 'scheduled'),
+        ('urgent', 'urgent'),
+    ]
+    type = serializers.ChoiceField(choices=ORDER_CHOICES)
 
 class MaintainenceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,6 +83,17 @@ class UrgentDeliverySerializer(serializers.ModelSerializer):
     class Meta:
         model = UrgentDelivery
         fields = "__all__"
+    
+    def update(self, instance, validated_data):
+
+        instance.email = validated_data.get('email', instance.email)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.address = validated_data.get('address', instance.address)
+        instance.date = validated_data.get('date', instance.date)
+        instance.quantity = validated_data.get('quantity', instance.quantity)
+        instance.save()
+        return instance
+
         
 
 class InvoiceSerializer(serializers.ModelSerializer):
