@@ -40,9 +40,9 @@
 <tr>
   <th class="field-email">
     {% if row.formatted_id|contains:"ord" %}
- <a href="/adminusers/order/{{row.id}}/change/"></a>
+ <a href="/dashboardusers/order/{{row.id}}/change/">
       {% else %}
-      <a href="/adminusers/urgentdelivery/{{row.id}}/change/">
+      <a href="/dashboardusers/urgentdelivery/{{row.id}}/change/">
 
 {% endif %}
       {{row.formatted_id}}</a></th>
