@@ -45,7 +45,7 @@ class AdminCustomer(admin.ModelAdmin):
     list_display = ('email', 'company_name', 'date_joined')  # Display these fields in the admin list view
     search_fields = ('email', 'company_name') 
     search_help_text = "Search by email or company name"
-    list_per_page = 25
+    list_per_page = 10
 
 class AdminOrder(admin.ModelAdmin):
     list_display = ("id", 'user', 'start_date', 'status', )
@@ -54,7 +54,7 @@ class AdminOrder(admin.ModelAdmin):
     # filter_horizontal = ["start_date"]
     search_fields = ('id', 'user') 
     search_help_text = "Search by order_id  or user"
-    list_per_page = 25
+    list_per_page = 10
 
 class UrgentDeliveryAdmin(admin.ModelAdmin):
     list_display = ( "id",'user', 'date', 'status',)
@@ -62,7 +62,7 @@ class UrgentDeliveryAdmin(admin.ModelAdmin):
     list_filter= ['status']
     search_fields = ('id', 'user', "date") 
     search_help_text = "Search by order_id  or user"
-    list_per_page = 25
+    list_per_page = 10
     
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ( "id","user",'order_id', 'urgent_delivery_id', 'payment_date')
@@ -70,13 +70,13 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_filter= ['payment_date']
     search_fields = ['id']
     search_help_text = "Search by invoice id "
-    list_per_page = 25
+    list_per_page = 10
 
 class MaintainenceAdmin(admin.ModelAdmin):
     list_display = ('id','date', 'user','email', 'address', "problem_statment")
     list_display_links = ['id','user']
     list_filter= ['date']
-    list_per_page = 25
+    list_per_page = 10
 
 custom_admin_site.register(Customer,AdminCustomer)
 custom_admin_site.register(Order, AdminOrder)

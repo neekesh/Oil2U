@@ -12,7 +12,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Customer,Invoice, Order, UrgentDelivery, Maintainence, Notification
-from rest_framework.pagination import PageNumberPagination
 from .utils import add_date
 
 @api_view(["POST",])
@@ -145,10 +144,7 @@ def all_invoices(request):
     
     user=request.user
     invoices = Invoice.objects.select_related('urgent_delivery').select_related('order').filter(user = user).order_by("-payment_date")
-    paginator = Paginator(invoices, 4)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    serializer = InvoiceSerializer(page_obj, many=True)
+    serializer = InvoiceSerializer(invoices, many=True)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -197,13 +193,6 @@ def maintainence(request):
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
     serializer.save()
     return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class CustomPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 1000
-
 
 @api_view(["GET",])
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
@@ -270,11 +259,7 @@ def notification_list(request):
         notifications = Notification.objects.filter(user=request.user).order_by("-date")
     except Notification.DoesNotExist:
         return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    paginator = Paginator(notifications, 4)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    serializer = NotificationSerializer(page_obj, many=True)
+    serializer = NotificationSerializer(notifications, many=True)
     return Response(serializer.data, status=200)
 
 
