@@ -86,7 +86,7 @@ class Customer(AbstractUser):
 
     
     def __str__(self) -> str:
-        return f"{self.first_name} {self.last_name} has email ${self.email}"
+        return f"{self.first_name} {self.last_name}"
 
 class Order(models.Model):
     class FrequncyEnum(models.TextChoices):
@@ -125,6 +125,11 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         self.price = self.quantity * 10
         super(Order, self).save(*args, **kwargs)
+    
+    @property
+    def formatted_id(self):
+        return f"ord-{self.id}"
+
 
 
 class UrgentDelivery(models.Model):
@@ -141,19 +146,30 @@ class UrgentDelivery(models.Model):
     phone_number = models.CharField(max_length=20, blank=True)
     quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
     status = models.CharField( 
-                        max_length=20, 
-                        choices=Status.choices,
-                         default=Status.CREATED,)
+                            max_length=20, 
+                            choices=Status.choices,
+                            default=Status.CREATED,
+                        )
     price = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
     user = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="urgent_delivery")
                        
     
     def __str__(self):
-        return f"{self.email} has urgernt develivery to {self.address}"
+        return f"{self.email} has urgent delivery to {self.address}"
+    
+    @property
+    def formatted_id(self):
+        return f"urd-{self.id}"
 
     def save(self, *args, **kwargs):
+    # if self.quantity is not None:
+    #     self.price = None
+    # else:
         self.price = self.quantity * 10
         super(UrgentDelivery, self).save(*args, **kwargs)
+    class Meta:
+        verbose_name_plural = "Urgent Deliveries"
+
     
     
 class Invoice(models.Model):

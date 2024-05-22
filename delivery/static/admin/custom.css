@@ -1,0 +1,24 @@
+#header{
+    background: green !important;
+} 
+
+input[type="submit"] {
+    
+    background: green !important;
+}
+
+.breadcrumbs{
+    background:  #708238 !important;
+}
+
+caption{
+    background:  #3F704D !important;
+
+}
+
+#changelist-filter > h2{
+    background:  #3F704D !important;
+}
+.admin-class {
+    
+}

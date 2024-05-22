@@ -41,7 +41,7 @@ def track_delivery_crated(sender, instance,created, **kwargs):
 @receiver(pre_save, sender=UrgentDelivery)
 def track_urgent_delivery_updated(sender, instance, **kwargs):
    if instance.pk:
-        old_instance = Order.objects.get(pk=instance.pk)
+        old_instance = UrgentDelivery.objects.get(pk=instance.pk)
         if instance.status != old_instance.status:
             
              Notification.objects.create(

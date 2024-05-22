@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+{% load custom_filters%}
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/custom.css" %}">
+{% endblock %}
+
+{% block content %}
+<h1>Today's Order</h1>
+<div class="results">
+<table id="result_list" style="width:100%">
+<thead>
+<tr>
+<th scope="col" class="sortable column-email">
+   
+   <div class="text"><a href="?o=1">ID</a></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="sortable column-email">
+   
+   <div class="text"><a href="?o=2">Email</a></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="sortable column-company_name">
+   
+   <div class="text"><a href="?o=3">Address</a></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="sortable column-date_joined">
+   
+   <div class="text"><a href="?o=4">Status</a></div>
+   <div class="clear"></div>
+</th>
+</tr>
+</thead>
+<tbody>
+ {% for row in table_data %}
+
+<tr>
+  <th class="field-email">
+    {% if row.formatted_id|contains:"ord" %}
+ <a href="/adminusers/order/{{row.id}}/change/"></a>
+      {% else %}
+      <a href="/adminusers/urgentdelivery/{{row.id}}/change/">
+
+{% endif %}
+      {{row.formatted_id}}</a></th>
+  <td class="field-company_name">{{row.email}}</td>
+  <td class="field-date_joined nowrap">{{row.address}}</td>
+  <td class="field-date_joined nowrap">{{row.status}}</td>
+</tr>
+{%endfor%}
+
+</tbody>
+</table>
+</div>
+{% endblock %}

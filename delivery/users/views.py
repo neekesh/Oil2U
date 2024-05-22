@@ -123,15 +123,17 @@ def invoice(request):
         order.save()
         invoice.save()
     else:
-        urgent_delivery = UrgentDelivery.objects.get(pk = serializer.data["order_id"] )
+        print("_______________________", serializer.data["order_id"] )
+        urgent_delivery = UrgentDelivery.objects.get(pk = int(serializer.data["order_id"]) )
+        print("_______________________", urgent_delivery )
         invoice = Invoice(
             urgent_delivery = urgent_delivery,
             user_id = request.user.id,
             payment_type = serializer.data["type"],
         )
+        invoice.save()
         urgent_delivery.status = "pending"
         urgent_delivery.save()
-        invoice.save()
     
     return Response("your payment was successfull", status=status.HTTP_201_CREATED)
 
@@ -341,21 +343,16 @@ def latest_order(request):
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 @authentication_classes([JWTAuthentication])
 def edit_order(request, pk):
-    print("jfkjalkdfkldflkdajlkfjakldfalksdfk")
     order_type = request.data["type"]
     request.data["user"] = request.user.id
-    print("jfkjalkdfkldflkdajlkfjakldfalksdfk"+"fjakljflkjdflkjlkflajlkfjalkflklklfkjasljlkdjflkj")
     match order_type:
         case "scheduled":
             try:
-                print("jfkjalkdfkldflkdajlkfjakldfa--------------lksdfk"+"fjakljflkjdflkjlkflajlkfjalkflklklfkjasljlkdjflkj")
                 order = Order.objects.get(pk=pk)
             
                 serializer = OrderSerializer(order, data=request.data)
                 if serializer.is_valid():
-                    print("jfkjalkdfkldflkdajlkfjakldfa********************lksdfk"+"fjakljflkjdflkjlkflajlkfjalkflklklfkjasljlkdjflkj")
                     serializer.update(order, validated_data=request.data)
-                    print("jfkjalkdfkldflkdajlkfjakldfa+++++++++lksdfk"+"fjakljflkjdflkjlkflajlkfjalkflklklfkjasljlkdjflkj")
                     return Response(serializer.data)
                 return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             except Order.DoesNotExist:
