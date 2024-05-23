@@ -42,10 +42,10 @@ def track_delivery_crated(sender, instance,created, **kwargs):
 @receiver(pre_save, sender=UrgentDelivery)
 def track_urgent_delivery_updated(sender, instance, **kwargs):
    if instance.pk:
-        old_instance = Order.objects.get(pk=instance.pk)
+        old_instance = UrgentDelivery.objects.get(pk=instance.pk)
         if instance.status != old_instance.status:
             notification = Notification.objects.get(urgent_delivery=old_instance)
-            notification.order_status =   old_instance.status
+            notification.order_status =   instance.status
             notification.save()
         change_fb_data(old_instance.user.email)
              
