@@ -10,46 +10,42 @@ from .utils import change_fb_data
 def track_order_updated(sender, instance, **kwargs):
     if instance.pk:
         old_instance = Order.objects.get(pk=instance.pk)
-        if instance.status != old_instance.status and instance.status == "completed":
-            Notification.objects.create(
-            order=old_instance,
-            user = old_instance.user,
-            order_status= instance.status,
-        )
-        change_fb_data(old_instance.user.email)
+        if instance.status != old_instance.status:
+            notification = Notification.objects.get(order=old_instance)
+            notification.order_status =   instance.status
+
+            notification.save()
+
+            change_fb_data(old_instance.user.email)
 
 @receiver(post_save, sender=Order)
 def track_order_created(sender, instance,created, **kwargs):
-    if instance.status:
-        if instance.status != "completed":
-            Notification.objects.create(
-                order=instance,
-                user = instance.user,
-                order_status= instance.status,
-            )
+    if created:
+            
+        Notification.objects.create(
+            order=instance,
+            user = instance.user,
+            order_status= instance.status,
+        )
         change_fb_data(instance.user.email)
         
 @receiver(post_save, sender=UrgentDelivery)
 def track_delivery_crated(sender, instance,created, **kwargs):
     if created:
-        if instance.status != "completed":
-            Notification.objects.create(
-                urgent_delivery=instance,
-                user = instance.user,
-                order_status= instance.status,
+        Notification.objects.create(
+            urgent_delivery=instance,
+            user = instance.user,
+            order_status= instance.status,
             )      
         change_fb_data(instance.user.email)
 
 @receiver(pre_save, sender=UrgentDelivery)
 def track_urgent_delivery_updated(sender, instance, **kwargs):
    if instance.pk:
-        old_instance = UrgentDelivery.objects.get(pk=instance.pk)
-        if instance.status != old_instance.status and instance.status == "completed":
-            
-            Notification.objects.create(
-            urgent_delivery=old_instance,
-            user = old_instance.user,
-            order_status= instance.status,
-            )
+        old_instance = Order.objects.get(pk=instance.pk)
+        if instance.status != old_instance.status:
+            notification = Notification.objects.get(urgent_delivery=old_instance)
+            notification.order_status =   old_instance.status
+            notification.save()
         change_fb_data(old_instance.user.email)
              
