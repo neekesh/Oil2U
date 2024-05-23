@@ -220,4 +220,4 @@ class Notification(models.Model):
                         default=Status.CREATED,
                     )
     def __str__(self):
-        return f"{self.status} is {self.is_seen}"
+        return f"{self.order_status} is {self.is_seen}"
